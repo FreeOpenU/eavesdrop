@@ -1,20 +1,23 @@
-import npyscreen
-#from Eavesdrop import pysharkSniffer
 import curses
-class UIforSniffer(npyscreen.NPSAppManaged):
-    def onStart(self):
-        self.registerForm("MAIN", MainForm())
 
-# This form class defines the display that will be presented to the user.
+def main(stdscr):
+    # Frame the interface area at fixed VT100 size
+    global screen
+    screen = stdscr.subwin(23, 79, 0, 0)
+    screen.box()
+    screen.hline(2, 1, curses.ACS_HLINE, 77)
+    screen.refresh()
 
-class MainForm(npyscreen.ActionForm):
-    def create(self):
-        F = npyscreen.Form(name= "Pyshark Sniffer")
-        F.add(npyscreen.Textfield, name= "Sniffer Output Saved to Eavesdrop_Data.txt")
-        F.add(npyscreen.TextfieldUnicode, value= " ")
+    # Define the topbar menus
+    file_menu = ("File", "file_func()")
+    proxy_menu = ("Proxy Mode", "proxy_func()")
+    doit_menu = ("Do It!", "doit_func()")
+    help_menu = ("Help", "help_func()")
+    exit_menu = ("Exit", "EXIT")
+    # Add the topbar menus to screen object
+    topbar_menu((file_menu, proxy_menu, doit_menu,
+                 help_menu, exit_menu))
 
-
-
-
-if __name__ == '_main__':
-    UIforSniffer().run()
+    # Enter the topbar menu loop
+    while topbar_key_handler():
+        draw_dict()
