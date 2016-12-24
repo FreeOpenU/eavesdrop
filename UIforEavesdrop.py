@@ -1,23 +1,26 @@
-import curses
 
-def main(stdscr):
-    # Frame the interface area at fixed VT100 size
-    global screen
-    screen = stdscr.subwin(23, 79, 0, 0)
-    screen.box()
-    screen.hline(2, 1, curses.ACS_HLINE, 77)
-    screen.refresh()
+from unicurses import *
+from Eavesdrop import pysharkSniffer
+def Main():
+    stdscr = initscr()
+    start_color()
+    use_default_colors()
+    init_pair(1,COLOR_CYAN,-1)
+    running = True
+    while (running):
+     #  addstr(pysharkSniffer.out_string, color_pair(1) + A_BOLD)
+       key = getch();
+       keypad(stdscr,True)
+       if (key == ord(' ')):
+           running = False
+           break
 
-    # Define the topbar menus
-    file_menu = ("File", "file_func()")
-    proxy_menu = ("Proxy Mode", "proxy_func()")
-    doit_menu = ("Do It!", "doit_func()")
-    help_menu = ("Help", "help_func()")
-    exit_menu = ("Exit", "EXIT")
-    # Add the topbar menus to screen object
-    topbar_menu((file_menu, proxy_menu, doit_menu,
-                 help_menu, exit_menu))
+    endwin()
+    return 0
 
-    # Enter the topbar menu loop
-    while topbar_key_handler():
-        draw_dict()
+
+
+
+if __name__ == '__main__':
+    Main()
+
