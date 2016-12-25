@@ -5,7 +5,7 @@ def HTTPHeaders(http_payload):
     try:
         # isolate headers
         headers_raw = http_payload[:http_payload.index("\r\n\r\n") + 2]
-        regex = ur"(?P&lt;'name&gt;.*?): (?P&lt;value&gt;.*?)\r\n"
+        regex = ur"(?:[\r\n]{0,1})(\w+\-\w+|\w+)(?:\ *:\ *)([^\r\n]*)(?:[\r\n]{0,1})"
         headers = dict(re.findall(regex, headers_raw, re.UNICODE))
         return headers
     except:
@@ -17,7 +17,7 @@ def HTTPHeaders(http_payload):
 def extractText(headers, http_payload):
         text = None
         try:
-            if 'text' in headers['Content-Type']:
+            if 'multipart/form-data' in headers['Content-Type']:
                 text = http_payload[http_payload.index("\r\n\r\n")+4:]
                 try:
                     if "Accept-Encoding" in headers.keys():

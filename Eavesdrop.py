@@ -1,10 +1,4 @@
 import os
-from
-
-os.system("tshark  -T fields -e  data.data -e frame.time -w Eavesdrop_Data.pcap > Eavesdrop_Data.txt -F pcap -c 1000")
-
-
-import os
 from scapy.all import *
 
 from getHTTPHeaders import HTTPHeaders, extractText
@@ -12,7 +6,6 @@ data = "Eavesdrop_Data.pcap"
 a = rdpcap(data)
 os.system("tshark  -T fields -e _ws.col.Info -e http -e frame.time -e  "
           "data.data -w Eavesdrop_Data.pcap > Eavesdrop_Data.txt -c 1000")
-os.system("tshark -r Eavesdrop_Data.pcap -Y http -w Eavesdrop_Data_http.pcap")
 text_directory = "/home/DragonQueen/"
 
 sessions = a.sessions()
