@@ -12,9 +12,11 @@ Then, it takes the pcap file, parses out form submissions, and saves them to a f
  after 1,000 packet captures but you can change it manually by going into the code and changing the -c parameter 
  to whatever value you like:
  
- os.system("tshark  -T fields -e _ws.col.Info -e http -e frame.time -e  "
-          "data.data -w Eavesdrop_Data.pcap > Eavesdrop_Data.txt -c 1000")
- nb: you can delete the -c parameter completely and add a -b duration parameter (measured in seconds)
+The UI works for normal short term sniffs but I will have to figure out how to add functionality for long term use:
+1) kill a sniff
+2) process captures continously
+3)download dependencies
+
 
 ## Installation
 
