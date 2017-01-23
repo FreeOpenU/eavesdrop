@@ -14,10 +14,10 @@ def HTTPHeaders(http_payload):
         return None
     return headers
 
-def extractText(headers, http_payload,type):
+def extractText(headers, http_payload):
         text = None
         try:
-            if type in headers['Content-Type']:
+            if 'text' in headers['Content-Type']:
                 text = http_payload[http_payload.index("\r\n\r\n")+4:]
                 try:
                     if "Accept-Encoding" in headers.keys():

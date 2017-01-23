@@ -17,9 +17,18 @@ captureFieldsDict = {
 
 }
 
+outputType = {
+0: 'text',
+1:'forms' ,
+2: 'image',
+3:" audio",
+
+}
 
 class EavesdropForm(npyscreen.Form):
     def create(self):
+        self.outputType = self.add(npyscreen.TitleSelectOne, max_height=6, name='Wanted Output',
+                                     values=['Text','Forms', 'Images', 'Audio'], scroll_exit=True)
         self.captureDurationType  = self.add(npyscreen.TitleSelectOne,max_height=6, name='Capture Type', values=['Capture By Packet Count',"Capture By File Size" ,'Capture By Time Limit', "Capture By Number of Files"],scroll_exit=True)
         self.duration = self.add(npyscreen.TitleText, name="Duration Value: ")
         self.fileName = self.add(npyscreen.TitleFilename, name="Filename:" )
@@ -31,7 +40,7 @@ def convertToComand(type,dur,fields,filename):
     v="tshark -T fields "
     for items in fields:
          v= v + (captureFieldsDict[items])
-    v ="\"" + v + captureDurationTypeDict[type[0]] + dur + " -w " + filename + ".pcap" +"\""
+    v = v + captureDurationTypeDict[type[0]] + dur + " -w " + filename + ".pcap"
     return v
 
 
@@ -39,13 +48,15 @@ def myFunction(*args):
     F = EavesdropForm(name = "Eavesdrop")
     F.edit()
     t= F.captureDurationType.value
+    wantedOutputIndex = F.outputType.value
+    wantedOutput = outputType[wantedOutputIndex[0]]
     val= F.duration.value
     fields = F.capFields.value
     name = F.fileName.value
     d = name + ".pcap"
     stats =F.stats.value
     command = convertToComand(t,val,fields,name)
-    output = eavesdrop(command,d)
+    output = eavesdrop(command,d, wantedOutput)
     str(output)
     return output
 
