@@ -17,7 +17,7 @@ def HTTPHeaders(http_payload):
 def extractText(headers, http_payload):
         text = None
         try:
-            if 'multipart/form-data' in headers['Content-Type']:
+            if 'text' in headers['Content-Type']:
                 text = http_payload[http_payload.index("\r\n\r\n")+4:]
                 try:
                     if "Accept-Encoding" in headers.keys():
