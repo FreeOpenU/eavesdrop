@@ -8,12 +8,14 @@ v = ""
 captureDurationTypeDict =[' -c ',
                            ' -a files: ' ,
                            ' -a duration: ',
-                          " -a filesize: "]
+                          " -a filesize: ",
+                          ""]
 captureFieldsDict = {
 0: ' -e _ws.col.Info ',
     1:' -e http ' ,
     2: ' -e frame.number ',
     3:" -e ip.addr ",
+    4: ''
 
 }
 
@@ -22,25 +24,37 @@ outputType = {
 1:'forms' ,
 2: 'image',
 3:" audio",
-
+4: ''
 }
+
 
 class EavesdropForm(npyscreen.Form):
     def create(self):
-        self.outputType = self.add(npyscreen.TitleSelectOne, max_height=6, name='Wanted Output',
-                                     values=['Text','Forms', 'Images', 'Audio'], scroll_exit=True)
-        self.captureDurationType  = self.add(npyscreen.TitleSelectOne,max_height=6, name='Capture Type', values=['Capture By Packet Count',"Capture By File Size" ,'Capture By Time Limit', "Capture By Number of Files"],scroll_exit=True)
+        self.captureDurationType  = self.add(npyscreen.TitleSelectOne,max_height=6, name='Capture Type', values=['Capture By Packet Count',"Capture By File Size" ,'Capture By Time Limit', "Capture By Number of Files", 'none'],scroll_exit=True)
         self.duration = self.add(npyscreen.TitleText, name="Duration Value: ")
         self.fileName = self.add(npyscreen.TitleFilename, name="Filename:" )
-        self.capFields = self.add(npyscreen.TitleMultiSelect, max_height=6, name='Tshark Fields', values=['Info Column', 'HTTP', 'frame Number', 'IP Address'], scroll_exit=True)
-        self.capProm= self.add(npyscreen.TitleSelectOne, max_height=6, name='!WARNIN! Promiscous Mode',values=['Promiscuous Mode'], scroll_exit=True)
-        self.stats = self.add(npyscreen.TitleMultiSelect, max_height=6, name='Capture Statistics',
-                                     values=['Conversations', 'http', 'DNS', 'Endpoints','Follow TCP/UDP'], scroll_exit=True)
-def convertToComand(type,dur,fields,filename):
-    v="tshark -T fields "
-    for items in fields:
-         v= v + (captureFieldsDict[items])
-    v = v + captureDurationTypeDict[type[0]] + dur + " -w " + filename + ".pcap"
+        self.capFields = self.add(npyscreen.TitleMultiSelect, max_height=6, name='Tshark Fields', values=['Info Column', 'HTTP', 'frame Number', 'IP Address', 'none'], scroll_exit=True)
+        self.capProm = self.add(npyscreen.TitleSelectOne, max_height=6, name='!WARNING! Promiscous Mode',values=['Promiscuous Mode', 'none'], scroll_exit=True)
+
+
+
+
+contSniffer ='tshark  -p  -T pdml -b duration:10 -b files:30 -w 0000.pcap'
+
+def convertToComand(type,dur,fields,filename,prom):
+    v="tshark"
+    if prom == [0]:
+        v += ' -p'
+    if fields != []:
+        v += " -T fields "
+        for items in fields:
+            v += " " + (captureFieldsDict[items])
+    if type != []:
+        v = v + captureDurationTypeDict[type[0]] + dur
+    if filename !=' ':
+        v + " -w " + filename + ".pcap"
+
+
     return v
 
 
@@ -48,17 +62,15 @@ def myFunction(*args):
     F = EavesdropForm(name = "Eavesdrop")
     F.edit()
     t= F.captureDurationType.value
+    promisc = F.capProm.value
     wantedOutputIndex = F.outputType.value
-    wantedOutput = outputType[wantedOutputIndex[0]]
     val= F.duration.value
     fields = F.capFields.value
     name = F.fileName.value
-    d = name + ".pcap"
-    stats =F.stats.value
-    command = convertToComand(t,val,fields,name)
-    output = eavesdrop(command,d, wantedOutput)
-    str(output)
-    return output
+    d = name
+    command = convertToComand(t,val,fields,name, promisc)
+    output = eavesdrop(contSniffer,d)
+    return
 
 if __name__ == '__main__':
-    print (npyscreen.wrapper_basic(myFunction))
+    npyscreen.wrapper_basic(myFunction)
