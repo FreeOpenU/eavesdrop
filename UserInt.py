@@ -39,8 +39,7 @@ class EavesdropForm(npyscreen.Form):
 
 
 
-contSniffer ='tshark  -p  -T pdml -b duration:10 -b files:30 -w 0000.pcap'
-
+contSniffer ='sudo tshark  -p -l'
 def convertToComand(type,dur,fields,filename,prom):
     v="tshark"
     if prom == [0]:
