@@ -1,29 +1,18 @@
-import pcapy
-from getHTTPHeaders import HTTPHeaders, extractText
-import os
-import time
+import re
 import subprocess
-from scapy.all import *
-import subprocess
-
-# os.system("tshark  -T fields -e _ws.col.Info -e http -e frame.time -e  "
-# "data.data -w Eavesdrop_Data.pcap -c 1000")
-x = "tshark  -T fields -e _ws.col.Info -e http -e frame.time -e data -p -w  E.pcap -c 1"
-#y = 'Eavesdrop_Data.pcap'
-y = 'Eavesdop_Data.pcap'
-T= "text/plain"
-
-
-def eavesdrop(x,y):
-    subprocess.call(x, shell=True)
-
 
 
 class Eavesdrop():
     #print device list
     def __init__(self):
+        pass
+
+    def getList(self):
         p = subprocess.Popen("tshark -D", stdout=subprocess.PIPE, shell=True)
-        self.devList = p.communicate()[0]
+        devlist = p.communicate()[0]
+        self.devList = re.compile("[0-9][.]").split(devlist)
+        self.devList.pop(0)
+        return self.devList
 
     # use to print tshark versions and options then exits
     def info(self):

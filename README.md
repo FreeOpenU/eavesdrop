@@ -6,14 +6,24 @@ other Ethernet traffic. Part of Unhackable Server Project.
 
 ## Code Information
 
-Eavesdrop, sniffs the network, parses out plain texts and saves it to a file.
-    Using the command line, it initiates a packet capture and saves it to a file called Eavesdrop_Data.pcap.
-Then, it takes the pcap file, parses out form submissions, and saves them to a file. The capture is initialized to stop
- after 1,000 packet captures but you can change it manually by going into the code and changing the -c parameter 
- to whatever value you like:
+Eavesdrop, sniffs the network, parses out text and saves it to a file.
+    Using the command line, it initiates a packet capture that pipes the stdout into the python progra.
+    The capture pipes the ENTIRE packet but does not save it because it is not needed. 
+    I will save the finished packet as a variable, do what needs to be done and overwrite the variable with the nest packet.
+    The app is meant to be as small as possible.
+##User Interface
+   The user interface, at this point only allows the user (let's call him Dave) to chose with device he want't to sniff on.
+   I mean to add some nore functionality:
  
-The UI works for normal short term sniffs but I will have to figure out how to add functionality for long term use: 1) kill a sniff 2) process captures continously 3)download dependencies
+        1.Dave can choose what type of payload he wants to save.
+        2.Dave can go in and see how many of each kind of requests and responses the device has been recieving.
+        3.Dave can choose where the payload is being stored
+        4.Dave can kill the switch
+        5.Dave can count/ see a graph of malformed packets to see if Hal is misbehaving
+ 
+
 ## Installation
 
 This code uses Python 2.7 and t-shark. It also used zlib, scappy,
-os, and re (for regular expressions). You also must have root access.
+os, and re (for regular expressions). You also must have root access. I will create a requirements file when I have 
+most things functional.
