@@ -15,11 +15,12 @@ Eavesdrop, sniffs the network, parses out text and saves it to a file.
    The user interface, at this point only allows the user (let's call him Dave) to chose with device he want't to sniff on.
    I mean to add some nore functionality:
  
-        1.Dave can choose what type of payload he wants to save.
-        2.Dave can go in and see how many of each kind of requests and responses the device has been recieving.
-        3.Dave can choose where the payload is being stored
-        4.Dave can kill the switch
-        5.Dave can count/ see a graph of malformed packets to see if Hal is misbehaving
+  -[ ] Dave can choose what type of payload he wants to save.
+  -[ ] Dave can go in and see how many of each kind of requests and responses the device has been recieving.
+  -[ ] Dave can choose where the payload is being stored
+  -[ ] Dave can kill the switch
+  -[ ] Dave can count/ see a graph of malformed packets to see if Hal is misbehaving
+  -[x] Dave can choose which device to sniff on
  
 
 ## Installation
