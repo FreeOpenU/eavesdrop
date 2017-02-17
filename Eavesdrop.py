@@ -3,8 +3,9 @@ import subprocess
 import json
 from collections import OrderedDict
 
+
 class Eavesdrop():
-    #print device list
+    # print device list
     def __init__(self):
         pass
 
@@ -20,8 +21,9 @@ class Eavesdrop():
         p = subprocess.Popen("tshark -h", stdout=subprocess.PIPE, shell=True)
         result = p.communicate()
         self.devList = result[0]
-#Parse the packets into ordered dict
-    def parsePacket(self,pkt):
+
+    # Parse the packets into ordered dict
+    def parsePacket(self, pkt):
         patt = re.compile("[^\n]+")
         x = patt.findall(pkt)
         key = ""
@@ -51,10 +53,6 @@ class Eavesdrop():
             else:
                 packet = data
                 data = ""
-                print self.parsePacket(packet)
+                print(self.parsePacket(packet))
             if "malformed" in data:
                 count += 1
-
-
-
-

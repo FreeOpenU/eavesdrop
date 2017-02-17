@@ -10,18 +10,15 @@ class EavesdropApp(npyscreen.NPSAppManaged):
         self.addForm("MAIN", EavesdropForm, name="Sniffing Parameters")
 
 
-
-
-
-
-
-class EavesdropForm(npyscreen.ActionFormV2):
+class EavesdropForm(npyscreen.ActionForm):
     def afterEditing(self):
         self.parentApp.setNextForm(None)
     def create(self):
         self.captureDevice = self.add(npyscreen.TitleSelectOne,max_height=20, name='Capture Device', values= Eavesdrop().getList(),scroll_exit=True)
         self.Contenttype = self.add(npyscreen.TitleSelectOne, max_height=20, name='Content Type',
                                       values=contentType, scroll_exit=True)
+
+
 
     def on_ok(self):
         #npyscreen.notify_confirm("Starting Sniff:     ")
@@ -32,7 +29,8 @@ class EavesdropForm(npyscreen.ActionFormV2):
         Sniffoutput = Eavesdrop().contSniff()
         return Sniffoutput
 
-
+class seeOutput(npyscreen.BoxBasic):
+    pass
 
 
 
