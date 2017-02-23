@@ -42,9 +42,11 @@ class Eavesdrop():
                 que[key][val1] = val2
         return que
 
-    def contSniff(self):
+    def contSniff(self,type='multipart/form-data', save=True):
         count = 0
         data = ""
+        if save == True:
+            self.f = open('pacFile.json', 'w')
         p = subprocess.Popen("tshark -V  -l -p  -S '::::END OF PACKET::::::' ", stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, shell=True)
         for line in iter(p.stdout.readline, '\n\r\n'):
@@ -53,6 +55,18 @@ class Eavesdrop():
             else:
                 packet = data
                 data = ""
-                print(self.parsePacket(packet))
+                pac = (self.parsePacket(packet))
+                if save == True:
+                    self.saveSniffs(type,pac)
             if "malformed" in data:
                 count += 1
+
+
+    def saveSniffs(self,type,packet):
+        print(str(type))
+        found = False
+        #for k,v in packet.items():
+        #    if type in v:
+        #        found = True
+        #if found == True:
+        #        (json.dump(packet,fp= self.f))
