@@ -28,3 +28,4 @@ Eavesdrop, sniffs the network, parses out text and saves it to a file.
 This code uses Python 2.7 and t-shark. It also used zlib, scappy,
 os, and re (for regular expressions). You also must have root access. I will create a requirements file when I have 
 most things functional.
+There is a requirements.txt file
