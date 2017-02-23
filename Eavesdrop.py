@@ -60,13 +60,12 @@ class Eavesdrop():
                     self.saveSniffs(type,pac)
             if "malformed" in data:
                 count += 1
-
+        return
 
     def saveSniffs(self,type,packet):
-        print(str(type))
         found = False
-        #for k,v in packet.items():
-        #    if type in v:
-        #        found = True
-        #if found == True:
-        #        (json.dump(packet,fp= self.f))
+        for k,v in packet.items():
+            if type in v:
+                found = True
+        if found == True:
+                (json.dump(packet,fp= self.f))

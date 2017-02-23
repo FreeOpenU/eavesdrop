@@ -1,4 +1,5 @@
 import npyscreen
+import curses
 from Eavesdrop import Eavesdrop
 
 contentType = ['multipart/form-data','text','video','audio', 'image']
@@ -6,12 +7,14 @@ contentType = ['multipart/form-data','text','video','audio', 'image']
 
 class EavesdropApp(npyscreen.NPSAppManaged):
     def onStart(self):
+        npyscreen.setTheme(npyscreen.Themes.ColorfulTheme)
         self.addForm("MAIN", EavesdropForm, name="Sniffing Parameters")
 
 
-class EavesdropForm(npyscreen.ActionForm):
+class EavesdropForm(npyscreen.Form):
     def afterEditing(self):
         self.parentApp.setNextForm(None)
+
     def create(self):
         self.captureDevice = self.add(npyscreen.TitleSelectOne,max_height=20, name='Capture Device', values= Eavesdrop().getList(),scroll_exit=True)
         self.Contenttype = self.add(npyscreen.TitleSelectOne, max_height=20, name='Content Type',
@@ -19,15 +22,18 @@ class EavesdropForm(npyscreen.ActionForm):
 
         self.SavePacket = self.add(npyscreen.TitleSelectOne,max_height=10,name='Save Packets?',values=['Yes','No']
                                    ,scroll_exit = True)
+        self.SniffButton = self.add(npyscreen.Button,name='Start Sniff', when_pressed_function = self.start_Sniff)
 
-    def on_ok(self):
+
+    def start_Sniff(self):
         F = EavesdropForm(name="Eavesdrop")
-        F.edit()
         dev = F.captureDevice.value
-        type = F.Contenttype.value
         if F.SavePacket.value == 'No':
             saveFile = False
-        else: saveFile = True
+            type = None
+        else:
+            saveFile = True
+            type = contentType[F.Contenttype.value[0]]
         Sniffoutput = Eavesdrop().contSniff(type=type,save=saveFile)
         return Sniffoutput
 
@@ -37,4 +43,4 @@ class seeOutput(npyscreen.BoxBasic):
 
 
 if __name__ == '__main__':
-    print(EavesdropApp().run())
+    (EavesdropApp().run())
