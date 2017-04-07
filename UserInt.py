@@ -22,7 +22,7 @@ class EavesdropForm(npyscreen.Form):
 
         self.SavePacket = self.add(npyscreen.TitleSelectOne,max_height=10,name='Save Packets?',values=['Yes','No']
                                    ,scroll_exit = True)
-        self.SniffButton = self.add(npyscreen.Button,name='Start Sniff', when_pressed_function = self.start_Sniff)
+        self.SniffButton = self.add(npyscreen.ButtonPress,name='Start Sniff', when_pressed_function = self.start_Sniff)
 
 
     def start_Sniff(self):
@@ -33,7 +33,7 @@ class EavesdropForm(npyscreen.Form):
             type = None
         else:
             saveFile = True
-            type = contentType[F.Contenttype.value[0]]
+            type = F.Contenttype.value
         Sniffoutput = Eavesdrop().contSniff(type=type,save=saveFile)
         return Sniffoutput
 
