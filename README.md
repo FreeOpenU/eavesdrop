@@ -7,7 +7,7 @@ other Ethernet traffic. Part of Unhackable Server Project.
 ## Code Information
 
 Eavesdrop, sniffs the network, parses out text and saves it to a file.
-    Using the command line, it initiates a packet capture that pipes the stdout into the python progra.
+    Using the command line, it initiates a packet capture that pipes the stdout into the python program.
     The capture pipes the ENTIRE packet but does not save it because it is not needed. 
     I will save the finished packet as a variable, do what needs to be done and overwrite the variable with the nest packet.
     The app is meant to be as small as possible.
@@ -28,4 +28,4 @@ Eavesdrop, sniffs the network, parses out text and saves it to a file.
 This code uses Python 2.7 and t-shark. It also used zlib, scappy,
 os, and re (for regular expressions). You also must have root access. I will create a requirements file when I have 
 most things functional.
-There is a requirements.txt file
+

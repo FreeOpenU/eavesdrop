@@ -3,9 +3,8 @@ import subprocess
 import json
 from collections import OrderedDict
 
-
 class Eavesdrop():
-    # print device list
+    #print device list
     def __init__(self):
         pass
 
@@ -21,9 +20,14 @@ class Eavesdrop():
         p = subprocess.Popen("tshark -h", stdout=subprocess.PIPE, shell=True)
         result = p.communicate()
         self.devList = result[0]
-
-    # Parse the packets into ordered dict
-    def parsePacket(self, pkt):
+    # create T-shar sniff command
+    def create_sniff_command(self,dev):
+        tshark_command = ''
+        #for i in dev:
+        #    tshark_command += ' -i ' + str(dev)
+        return tshark_command
+    #Parse the packets into ordered dict
+    def parsePacket(self,pkt):
         patt = re.compile("[^\n]+")
         x = patt.findall(pkt)
         key = ""
@@ -42,11 +46,10 @@ class Eavesdrop():
                 que[key][val1] = val2
         return que
 
-    def contSniff(self,type='multipart/form-data', save=True):
+    def contSniff(self, deviceList,capture_type, save=True ):
         count = 0
         data = ""
-        if save == True:
-            self.f = open('pacFile.json', 'w')
+        print self.create_sniff_command(deviceList)
         p = subprocess.Popen("tshark -V  -l -p  -S '::::END OF PACKET::::::' ", stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, shell=True)
         for line in iter(p.stdout.readline, '\n\r\n'):
@@ -57,15 +60,18 @@ class Eavesdrop():
                 data = ""
                 pac = (self.parsePacket(packet))
                 if save == True:
-                    self.saveSniffs(type,pac)
+                    self.saveSniffs(capture_type, pac, save=False)
             if "malformed" in data:
                 count += 1
         return
 
-    def saveSniffs(self,type,packet):
-        found = False
-        for k,v in packet.items():
-            if type in v:
-                found = True
-        if found == True:
+    def saveSniffs(self,capture_type,packet,save):
+        if save == True:
+            self.f = open('pacFile.json', 'w')
+            found = False
+            for k,v in packet.items():
+                if capture_type in v:
+                    found = True
+            if found == True:
                 (json.dump(packet,fp= self.f))
+
