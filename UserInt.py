@@ -1,4 +1,5 @@
 import npyscreen
+
 from Eavesdrop import Eavesdrop
 
 contentType = ['multipart/form-data','text','video','audio', 'image']
@@ -10,7 +11,8 @@ Eavesdrop = Eavesdrop()
 
 
 class EavesdropApp(npyscreen.NPSAppManaged):
-
+    Options = npyscreen.OptionList()
+    options = Options.options
     def onStart(self):
 
         npyscreen.setTheme(npyscreen.Themes.ColorfulTheme)
@@ -66,38 +68,40 @@ class EavesdropConfirmation(npyscreen.ActionForm):
         self.parentApp.switchForm(None)
 
     def on_ok(self):
-        M = self.parentApp.getForm('MAIN')
-        confirmedParams = self.parentApp.getForm('SNIFFER')
-        confirmedParams.captureDevice = M.captureDevice.value
-        #self.parentApp.captureDevice = self.device.value
+        sniffer = self.parentApp.getForm('SNIFFER')
+        sniffer.captureDevice.value = self.device.value
+        sniffer.SniffType.value = self.SniffType.value
+        sniffer.SavePacket.value = self.willyousave.value
         self.parentApp.switchForm('SNIFFER')
 
 
 
 class activateEavesdrop(npyscreen.ActionForm):
     def start_Sniff(self):
-        F = activateEavesdrop(name='Sniffing Network')
-        dev = F.captureDevice.value
-        if F.SavePacket.value == 0:
-            saveFile = False
+        dev = self.captureDevice.value
+        if self.SavePacket.value == 'Yes':
+            saveFile = True
             packetType = ''
         else:
-            saveFile = True
-            packetType = F.Contenttype.value
-        if saveFile == True  or saveFile == False:
+            saveFile = False
+            packetType = self.SniffType.value
+        if saveFile == True or saveFile == False:
             Sniffoutput = Eavesdrop.contSniff(deviceList=dev, capture_type=packetType, save=saveFile)
         else:
             Sniffoutput = 'Params not here'
         return Sniffoutput
 
-
     def create(self):
-        self.showOutput =''
-        self.captureDevice = None
-        self.Contenttype = ''
-        self.SavePacket = ''
-        self.add(npyscreen.Textfield, value=self.captureDevice)
-        print 'does this work the way I think?'
+        self.showOutput = ''
+        self.SniffType = self.add(npyscreen.Textfield)
+        self.captureDevice = self.add(npyscreen.Textfield)
+        self.SavePacket = self.add(npyscreen.Textfield)
+
+    def while_editing(self):
+        self.start_Sniff()
+
+
+
 
     def on_cancel(self):
         self.parentApp.switchForm(None)

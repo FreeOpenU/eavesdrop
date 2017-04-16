@@ -1,7 +1,8 @@
+import json
 import re
 import subprocess
-import json
 from collections import OrderedDict
+
 
 class Eavesdrop():
     #print device list
@@ -60,7 +61,7 @@ class Eavesdrop():
                 data = ""
                 pac = (self.parsePacket(packet))
                 if save == True:
-                    self.saveSniffs(capture_type, pac, save=False)
+                    self.saveSniffs(capture_type, pac, save=True)
             if "malformed" in data:
                 count += 1
         return
