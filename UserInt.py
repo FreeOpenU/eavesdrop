@@ -9,14 +9,14 @@ Eavesdrop = Eavesdrop()
 
 
 
-
 class EavesdropApp(npyscreen.NPSAppManaged):
-    captureDevice, Contenttype, SavePacket = None,None,None
+
     def onStart(self):
+
         npyscreen.setTheme(npyscreen.Themes.ColorfulTheme)
         self.addForm("MAIN", EavesdropForm, name="Sniffing Parameters")
         self.addForm('CONFIRMATION',EavesdropConfirmation,name='confirmation Screen')
-        self.addForm('Sniffer',activateEavesdrop,name='Sniffing Network')
+        self.addForm('SNIFFER',activateEavesdrop,name='Sniffing Network')
 
 
 
@@ -47,7 +47,7 @@ class EavesdropForm(npyscreen.ActionForm):
 class EavesdropConfirmation(npyscreen.ActionForm):
     def activate(self):
         self.edit()
-        self.parentApp.setNextForm('Sniffer')
+        self.parentApp.setNextForm('SNIFFER')
 
 
     def create(self):
@@ -58,38 +58,49 @@ class EavesdropConfirmation(npyscreen.ActionForm):
         self.SniffType =   self.add(npyscreen.TitleFixedText,name='Selected Content Type: ')
         self.willyousave = self.add(npyscreen.TitleFixedText, name='Will you Save?')
         self.BackButton =  self.add(npyscreen.ButtonPress, name='Back',when_pressed_function = self.on_back)
+
     def on_back(self):
         self.parentApp.switchFormPrevious()
+
     def on_cancel(self):
         self.parentApp.switchForm(None)
+
     def on_ok(self):
-        confirmedParams = self.parentApp.getForm('Sniffer')
-        confirmedParams.dev = self.device.value
-        self.parentApp.captureDevice = self.device.value
-        self.parentApp.switchForm('Sniffer')
+        M = self.parentApp.getForm('MAIN')
+        confirmedParams = self.parentApp.getForm('SNIFFER')
+        confirmedParams.captureDevice = M.captureDevice.value
+        #self.parentApp.captureDevice = self.device.value
+        self.parentApp.switchForm('SNIFFER')
 
 
 
 class activateEavesdrop(npyscreen.ActionForm):
     def start_Sniff(self):
-        F = self.parentApp.getForm('MAIN')
-        dev = type(self.parentApp.captureDevice)#F.captureDevice.value
-        if F.SavePacket.value == 'No':
+        F = activateEavesdrop(name='Sniffing Network')
+        dev = F.captureDevice.value
+        if F.SavePacket.value == 0:
             saveFile = False
-            packettype = None
+            packetType = ''
         else:
             saveFile = True
-            capturetype = F.Contenttype.value
-        #Sniffoutput = Eavesdrop.contSniff(deviceList=dev, capture_type='', save=saveFile)
-        #print dev
-        return dev
+            packetType = F.Contenttype.value
+        if saveFile == True  or saveFile == False:
+            Sniffoutput = Eavesdrop.contSniff(deviceList=dev, capture_type=packetType, save=saveFile)
+        else:
+            Sniffoutput = 'Params not here'
+        return Sniffoutput
+
 
     def create(self):
-        self.dev = self.add
-        self.aldlk = self.add(npyscreen.TitleFixedText, value=self.dev)
+        self.showOutput =''
+        self.captureDevice = None
+        self.Contenttype = ''
+        self.SavePacket = ''
+        self.add(npyscreen.Textfield, value=self.captureDevice)
+        print 'does this work the way I think?'
 
     def on_cancel(self):
         self.parentApp.switchForm(None)
 
 if __name__ == '__main__':
-    myApp =  EavesdropApp().run()
+   EavesdropApp().run()
