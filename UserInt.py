@@ -9,10 +9,7 @@ Eavesdrop = Eavesdrop()
 
 
 
-
 class EavesdropApp(npyscreen.NPSAppManaged):
-    Options = npyscreen.OptionList()
-    options = Options.options
     def onStart(self):
 
         npyscreen.setTheme(npyscreen.Themes.ColorfulTheme)
@@ -24,17 +21,21 @@ class EavesdropApp(npyscreen.NPSAppManaged):
 
 class EavesdropForm(npyscreen.ActionForm):
     deviceList = Eavesdrop.getList()
+    if len(deviceList) <= 0:
+        deviceList = ['No devices Available: Make sure tShark is downloaded']
     def activate(self):
         self.edit()
         self.parentApp.setNextForm('CONFIRMATION')
 
     def create(self):
-        self.captureDevice = self.add(npyscreen.TitleSelectOne,max_height=20, name='Capture Device', values= self.deviceList,scroll_exit=True)
-        self.Contenttype = self.add(npyscreen.TitleSelectOne, max_height=20, name='Content Type',
-                                      values=contentType, scroll_exit=True, default=[0])
+        self.captureDevice = self.add(npyscreen.TitleSelectOne, max_height=6, name='Capture Device', value=[0],
+                                      values=self.deviceList, scroll_exit=True)
+        self.Contenttype = self.add(npyscreen.TitleSelectOne, max_height=6, name='Content Type',
+                                    values=contentType, scroll_exit=True, value=[0])
 
-        self.SavePacket = self.add(npyscreen.TitleSelectOne,max_height=10,name='Save Packets?',values=willyouSave
-                                   ,scroll_exit = True)
+        self.SavePacket = self.add(npyscreen.TitleSelectOne, max_height=6, value=[0], name='Save Packets?',
+                                   values=willyouSave
+                                   , scroll_exit = True)
 
 
     def on_ok(self):

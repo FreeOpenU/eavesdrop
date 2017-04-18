@@ -68,7 +68,7 @@ class Eavesdrop():
 
     def saveSniffs(self,capture_type,packet,save):
         if save == True:
-            self.f = open('pacFile.json', 'w')
+            self.f = open('pacFile.json', 'a')
             found = False
             for k,v in packet.items():
                 if capture_type in v:
