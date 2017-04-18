@@ -16,16 +16,28 @@ Eavesdrop, sniffs the network, parses out text and saves it to a file.
    I mean to add some nore functionality:
  
   -[x] Dave can choose what type of payload he wants to save.
-  -[ ] Dave can go in and see how many of each kind of requests and responses the device has been receiving.
+  -[ ] Dave can go in and see how many of each kind of requests and
+       responses the device has been receiving.
   -[ ] Dave can choose where the payload is being stored
   -[ ] Dave can kill the sniff
   -[ ] Dave can count/ see a graph of malformed packets to see if Hal is misbehaving
   -[x] Dave can choose which device to sniff on
  
 
-## Installation
 
-This code uses Python 2.7 and t-shark. It also used zlib, scappy,
-os, and re (for regular expressions). You also must have root access. I will create a requirements file when I have 
-most things functional.
+## Packaging Eavesdrop:
+
+    I used PyInstaller to package the program into a binary executable.
+The drawback is that the binary file can only be used on the same type of
+system it was created on.
+To create the executable, change into the eavesdrop directory and
+Use: ```pyinstaller --onefile UserInt```
+
+This will create two folders, build and dist.The executable will be in
+the dist folder.
+
+## Running the application
+The system must have tshark on it. Thats it!
+
+
 
