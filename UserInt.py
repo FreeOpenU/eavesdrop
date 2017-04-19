@@ -1,3 +1,5 @@
+from threading import Thread, Timer
+
 import npyscreen
 
 from Eavesdrop import Eavesdrop
@@ -10,9 +12,9 @@ Eavesdrop = Eavesdrop()
 
 
 class EavesdropApp(npyscreen.NPSAppManaged):
+    keypress_timeout_default = 5
     def onStart(self):
-
-        npyscreen.setTheme(npyscreen.Themes.ColorfulTheme)
+        npyscreen.setTheme(npyscreen.Themes.ElegantTheme)
         self.addForm("MAIN", EavesdropForm, name="Sniffing Parameters")
         self.addForm('CONFIRMATION',EavesdropConfirmation,name='confirmation Screen')
         self.addForm('SNIFFER',activateEavesdrop,name='Sniffing Network')
@@ -35,7 +37,7 @@ class EavesdropForm(npyscreen.ActionForm):
 
         self.SavePacket = self.add(npyscreen.TitleSelectOne, max_height=6, value=[0], name='Save Packets?',
                                    values=willyouSave
-                                   , scroll_exit = True)
+                                   , scroll_exit=True)
 
 
     def on_ok(self):
@@ -93,16 +95,33 @@ class activateEavesdrop(npyscreen.ActionForm):
         return Sniffoutput
 
     def create(self):
-        self.showOutput = ''
-        self.SniffType = self.add(npyscreen.Textfield)
-        self.captureDevice = self.add(npyscreen.Textfield)
-        self.SavePacket = self.add(npyscreen.Textfield)
+        self.editing = False
+        self.packetCount = self.add(npyscreen.Textfield, editable=False, value='not updating')
+        self.showMalformed = self.add(npyscreen.Textfield, editable=False, value='not updating')
+        self.showHost = self.add(npyscreen.Textfield, editable=False, value='not updating')
+        self.SniffType = self.add(npyscreen.Textfield, editable=False, hidden=True)
+        self.captureDevice = self.add(npyscreen.Textfield, editable=False, hidden=True)
+        self.SavePacket = self.add(npyscreen.Textfield, editable=False, hidden=True)
+        self.Packet = self.add(npyscreen.Textfield, editable=False, hidden=True)
+        t = Thread(target=self.start_Sniff)
+        t.start()
 
-    def while_editing(self):
-        self.start_Sniff()
+    # def before_editing(self, *args, **keywords):
 
 
 
+    def while_waiting(self):
+        Timer(1.0, self.update_count())
+
+    def update_count(self):
+        self.packetCount.value = str(Eavesdrop.pktCount)
+        self.packetCount.update()
+        self.showHost.value = str(Eavesdrop.host_count)
+        self.showHost.update()
+        self.showMalformed.value = str(Eavesdrop.malcount)
+        self.showMalformed.update()
+        self.Packet.value = str(Eavesdrop.packet)
+        self.Packet.update()
 
     def on_cancel(self):
         self.parentApp.switchForm(None)

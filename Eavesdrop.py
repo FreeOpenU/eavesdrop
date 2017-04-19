@@ -1,13 +1,15 @@
 import json
 import re
 import subprocess
-from collections import OrderedDict
-
 
 class Eavesdrop():
     #print device list
     def __init__(self):
-        pass
+        self.pktCount = 0
+        self.malcount = 0
+        self.host_count = 0
+        self.f = open('pacFile.json', 'a')
+        self.packet = ''
 
     def getList(self):
         p = subprocess.Popen("tshark -D", stdout=subprocess.PIPE, shell=True)
@@ -34,45 +36,51 @@ class Eavesdrop():
         key = ""
         val1 = ""
         val2 = ""
-        que = OrderedDict()
+        que = {}
         for l in x:
             if "    " not in l and "        " not in l:
                 key = l
                 que[key] = ''
-            if "    " in l and "        " not in l:
+            elif "    " in l and "        " not in l:
+                l = l.replace("    ", "")
                 val1 += l
                 que[key] = val1
-            if "    " not in l and "        " in l:
+            elif "    " not in l and "        " in l:
+                l = l.replace("        ", "")
                 val2 += l
                 que[key][val1] = val2
         return que
 
-    def contSniff(self, deviceList,capture_type, save=True ):
-        count = 0
+    def contSniff(self, capture_type, deviceList=None, save=True):
         data = ""
-        print self.create_sniff_command(deviceList)
+
         p = subprocess.Popen("tshark -V  -l -p  -S '::::END OF PACKET::::::' ", stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, shell=True)
-        for line in iter(p.stdout.readline, '\n\r\n'):
+        for line in iter(p.stdout.readline, ','):
             if ('::::END OF PACKET::::::' not in line):
                 data += line
             else:
-                packet = data
+                self.packet = data
+                print(self.packet)
                 data = ""
-                pac = (self.parsePacket(packet))
+                pac = (self.parsePacket(self.packet))
+                self.pktCount += 1
                 if save == True:
                     self.saveSniffs(capture_type, pac, save=True)
+                else:
+                    self.f.close()
             if "malformed" in data:
-                count += 1
+                self.malcount += 1
         return
-
     def saveSniffs(self,capture_type,packet,save):
         if save == True:
-            self.f = open('pacFile.json', 'a')
             found = False
             for k,v in packet.items():
-                if capture_type in v:
+                if capture_type in k:
                     found = True
             if found == True:
-                (json.dump(packet,fp= self.f))
+                json.dump(packet, fp=self.f)
 
+
+e = Eavesdrop()
+e.contSniff(capture_type="")

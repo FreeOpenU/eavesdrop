@@ -20,7 +20,7 @@ Eavesdrop, sniffs the network, parses out text and saves it to a file.
        responses the device has been receiving.
   -[ ] Dave can choose where the payload is being stored
   -[ ] Dave can kill the sniff
-  -[ ] Dave can count/ see a graph of malformed packets to see if Hal is misbehaving
+  -[x] Dave can count/ see a graph of malformed packets to see if Hal is misbehaving
   -[x] Dave can choose which device to sniff on
  
 
