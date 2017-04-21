@@ -9,7 +9,7 @@ class Eavesdrop():
         self.malcount = 0
         self.host_count = 0
         self.f = open('pacFile.json', 'a')
-        self.packet = ''
+        self.packet = {}
 
     def getList(self):
         p = subprocess.Popen("tshark -D", stdout=subprocess.PIPE, shell=True)
@@ -31,25 +31,12 @@ class Eavesdrop():
         return tshark_command
     #Parse the packets into ordered dict
     def parsePacket(self,pkt):
-        patt = re.compile("[^\n]+")
-        x = patt.findall(pkt)
-        key = ""
-        val1 = ""
-        val2 = ""
-        que = {}
-        for l in x:
-            if "    " not in l and "        " not in l:
-                key = l
-                que[key] = ''
-            elif "    " in l and "        " not in l:
-                l = l.replace("    ", "")
-                val1 += l
-                que[key] = val1
-            elif "    " not in l and "        " in l:
-                l = l.replace("        ", "")
-                val2 += l
-                que[key][val1] = val2
-        return que
+        headers_subheaders = re.split(r'(?<=\S)\n(?=\S)', pkt)
+        for item in headers_subheaders:
+            header = re.findall(r'(^(\S.+))', item, re.MULTILINE)
+            remains = item.replace(header[0][0], "")
+            self.packet[header[0][0]] = remains
+        return self.packet
 
     def contSniff(self, capture_type, deviceList=None, save=True):
         data = ""
@@ -61,12 +48,11 @@ class Eavesdrop():
                 data += line
             else:
                 self.packet = data
-                print(self.packet)
                 data = ""
                 pac = (self.parsePacket(self.packet))
                 self.pktCount += 1
                 if save == True:
-                    self.saveSniffs(capture_type, pac, save=True)
+                    self.saveSniffs(capture_type, pac, save=False)
                 else:
                     self.f.close()
             if "malformed" in data:
@@ -81,6 +67,3 @@ class Eavesdrop():
             if found == True:
                 json.dump(packet, fp=self.f)
 
-
-e = Eavesdrop()
-e.contSniff(capture_type="")
