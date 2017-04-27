@@ -29,7 +29,8 @@ class Eavesdrop(object):
         result = p.communicate()
         self.tsharkInfo = result[0]
         return self.tsharkInfo
-    # create T-shar sniff command
+
+    # create T-shark sniff command
     def create_sniff_command(self, interfaces):
         interface = str(interfaces + 1)
         tshark_command = "tshark -i  %s -V  -l -p -S '::::END OF PACKET::::::' " % interface
@@ -49,32 +50,31 @@ class Eavesdrop(object):
     def contSniff(self, save, capture_type, interface):
         if capture_type == "ALL":
             capture_type = ""
-        command = self.create_sniff_command(interface)  #"tshark -V  -l -p  -S '::::END OF PACKET::::::' "
-        data = ""
+        command = self.create_sniff_command(interface)
         p = subprocess.Popen(command, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, shell=True)
         for line in iter(p.stdout.readline, ','):
+            data = ""
             if ('::::END OF PACKET::::::' not in line):
                 data += line
             else:
                 packet = data
                 self.pktCount += 1
                 if save == "YES":
+                    self.saveSniffs(capture_type, packet)
+                else:
                     self.packet = self.parsePacket(packet)
-                    self.saveSniffs(capture_type, self.packet)
             if "malformed" in data:
                 self.malcount += 1
         return
 
     def saveSniffs(self, capture_type, packet):
-        found = False
-        for k, v in packet.items():
+        patt = re.compile(r"(?<=content-type:\s).+(?!\d)", re.IGNORECASE)
+        results = re.findall(patt, packet)
+        for k in results:
             if capture_type in k:
-                found = True
-            if capture_type in v:
-                found = True
-        if found == True:
-            json.dump(packet, fp=self.f)
+                self.packet = self.parsePacket(packet)
+                json.dump(self.packet, fp=self.f)
 
     def closeSniff(self):
         self.f.close()
