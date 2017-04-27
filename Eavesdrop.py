@@ -13,10 +13,11 @@ class Eavesdrop(object):
         self.pktCount = 0
         self.malcount = 0
         self.host_count = 0
-        self.packet = {}
-        self.f = open('pacFile.json', 'a')
+        self.parsed_packet = {}
+        self.current_packet = ""
 
-    def getList(self):
+    @property
+    def get_list(self):
         p = subprocess.Popen("tshark -D", stdout=subprocess.PIPE, shell=True)
         devlist = p.communicate()[0]
         self.devList = re.compile("[0-9][.]").split(devlist)
@@ -24,6 +25,7 @@ class Eavesdrop(object):
         return self.devList
 
     # use to print tshark versions and options then exits
+    @property
     def info(self):
         p = subprocess.Popen("tshark -h", stdout=subprocess.PIPE, shell=True)
         result = p.communicate()
@@ -36,7 +38,7 @@ class Eavesdrop(object):
         tshark_command = "tshark -i  %s -V  -l -p -S '::::END OF PACKET::::::' " % interface
         return tshark_command
     #Parse the packets into ordered dict
-    def parsePacket(self,pkt):
+    def parse_packet(self, pkt):
         packet = {}
         get = packet.get
         headers_subheaders = re.split(r'(?<=\S)\n(?=\S)', pkt)
@@ -47,34 +49,44 @@ class Eavesdrop(object):
         self.packet = packet
         return self.packet
 
-    def contSniff(self, save, capture_type, interface):
-        if capture_type == "ALL":
-            capture_type = ""
+    def continuous_sniff(self, save, content_type, interface):
+        data = ""
+        if content_type == "ALL":
+            content_type = ""
+        if save == "YES":
+            self.f = open('pacFile.json', 'a')
         command = self.create_sniff_command(interface)
-        p = subprocess.Popen(command, stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE, shell=True)
-        for line in iter(p.stdout.readline, ','):
-            data = ""
+        self.tshark_sniff = subprocess.Popen(command, stdout=subprocess.PIPE,
+                                             stderr=subprocess.PIPE, shell=True)
+
+        for line in iter(self.tshark_sniff.stdout.readline, ','):
+
             if ('::::END OF PACKET::::::' not in line):
                 data += line
             else:
-                packet = data
+                self.current_packet = data
                 self.pktCount += 1
                 if save == "YES":
-                    self.saveSniffs(capture_type, packet)
-                else:
-                    self.packet = self.parsePacket(packet)
+                    self.f.write(str(self.tshark_sniff.pid) + '\r\n\r\n\r\n')
+                    self.save_packets(content_type, self.current_packet)
             if "malformed" in data:
                 self.malcount += 1
+            data = ""
         return
 
-    def saveSniffs(self, capture_type, packet):
+    def save_packets(self, capture_type, packet):
         patt = re.compile(r"(?<=content-type:\s).+(?!\d)", re.IGNORECASE)
         results = re.findall(patt, packet)
         for k in results:
             if capture_type in k:
-                self.packet = self.parsePacket(packet)
+                self.parsed_packet = self.parse_packet(packet)
                 json.dump(self.packet, fp=self.f)
 
-    def closeSniff(self):
+    def terminate_sniff(self):
+        self.tshark_sniff.kill()
         self.f.close()
+        print("Goodbye")
+        return
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
