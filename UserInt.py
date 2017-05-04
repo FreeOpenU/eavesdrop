@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from threading import Thread, Timer
 
 import npyscreen
@@ -14,6 +15,7 @@ deviceList = Eavesdrop.get_list
 class EavesdropApp(npyscreen.NPSAppManaged):
     keypress_timeout_default = 5
     def onStart(self):
+        self.resize()
         npyscreen.setTheme(npyscreen.Themes.ElegantTheme)
         self.addForm("MAIN", EavesdropForm, name="Sniffing Parameters")
         self.addForm('CONFIRMATION', EavesdropConfirmation, name='confirmation Screen')
@@ -37,6 +39,7 @@ class EavesdropForm(npyscreen.ActionForm):
         self.SavePacket = self.add(npyscreen.TitleSelectOne, max_height=6, value=[0], name='Save Packets?',
                                    values=willyouSave
                                    , scroll_exit=True)
+        self.file_address = self.add(npyscreen.TitleFilename, name="Where do you want the text file: ")
 
 
     def on_ok(self):
@@ -44,6 +47,7 @@ class EavesdropForm(npyscreen.ActionForm):
         conf_form.device.value = deviceList[self.device.value[0]]
         conf_form.content_type.value = contentType[self.content_type.value[0]]
         conf_form.willyousave.value = willyouSave[self.SavePacket.value[0]]
+        conf_form.file_address.value = self.file_address.value
         self.parentApp.switchForm('CONFIRMATION')
     def on_cancel(self):
         self.parentApp.switchForm(None)
@@ -55,14 +59,16 @@ class EavesdropConfirmation(npyscreen.ActionForm):
 
 
     def create(self):
-        self.confMessage = self.add(npyscreen.TitleFixedText, value='Check Sniff Parameters. If it is correct, press the'
-                                                                    ' OK button, if it is not, press the Back button.'
-                                                                    ' Press the Cancel button if you give up!',
-                                    editable=False)
+        self.confMessage = self.add(npyscreen.TitleFixedText, value=
+        'Check Sniff Parameters. If it is correct, press the'
+        ' OK button, if it is not, press the Back button.'
+        ' Press the Cancel button if you give up!', editable=False)
         self.device = self.add(npyscreen.TitleFixedText, name='Selected Device: ', editable=False)
         self.content_type = self.add(npyscreen.TitleFixedText, name='Selected Content Type: ', editable=False)
         self.willyousave = self.add(npyscreen.TitleFixedText, name='Will you Save?', editable=False)
-        self.file_address = self.add(npyscreen.TitleFilenameCombo, name="Where do you want the json file: ")
+        self.file_address = self.add(npyscreen.TitleFixedText, name=
+        "What would you like to name the text file: ")
+
 
     def on_back(self):
         self.parentApp.switchFormPrevious()
@@ -75,6 +81,7 @@ class EavesdropConfirmation(npyscreen.ActionForm):
         sniffer.captureDevice.value = self.device.value
         sniffer.content_type.value = self.content_type.value
         sniffer.SavePacket.value = self.willyousave.value
+        sniffer.file_address.value = self.file_address.value
         self.parentApp.switchForm('SNIFFER')
 
 
@@ -83,8 +90,9 @@ class ActivateEavesdrop(npyscreen.ActionForm):
         dev = deviceList.index(self.captureDevice.value)
         desired_content_type = self.content_type.value
         save_packet = self.SavePacket.value
+        filename = self.file_address.value
         dropped_eaves = Eavesdrop.continuous_sniff(content_type=desired_content_type,
-                                                   save=save_packet, interface=dev)
+                                                   save=save_packet, interface=dev, filename=filename)
         return dropped_eaves
 
     def create(self):
@@ -93,13 +101,21 @@ class ActivateEavesdrop(npyscreen.ActionForm):
                                     value='not updating', name="Total Packets")
         self.malformed_packets = self.add(npyscreen.TitleFixedText, editable=False,
                                           value='not updating', name="Malformed Packets")
-        self.showHost = self.add(npyscreen.TitleFixedText, editable=False, value='not updating')
+        self.showHost = self.add(npyscreen.TitleFixedText, editable=False, value='not updating',
+                                 name="Glimpse of packet:")
         self.content_type = self.add(npyscreen.TitleFixedText, editable=False, hidden=True)
         self.captureDevice = self.add(npyscreen.TitleFixedText, editable=False, hidden=True)
-        self.SavePacket = self.add(npyscreen.Textfield, editable=False, hidden=True)
-        self.incoming_packets = self.add(npyscreen.Textfield, editable=False, name="Incoming Packets",
-                                         value="Not Updating")
-        self.kill_sniff = self.add(npyscreen.ButtonPress, name="KILL SNIFF", when_pressed_function=self.kill_button)
+        self.SavePacket = self.add(npyscreen.TitleFixedText, editable=False, hidden=True)
+        self.incoming_packets = self.add(npyscreen.TitleFixedText, editable=False,
+                                         name="Incoming Packets: ", value="Not Updating")
+        self.packets_of_interest = self.add(npyscreen.TitleFixedText, editable=False,
+                                            name="Packets of chosen type: ", value="Not Updating")
+        self.filename = self.add(npyscreen.TitleFixedText, editable=False, hidden=True,
+                                 name="What do you want to call your file name?")
+        self.file_address = self.add(npyscreen.TitleFixedText, editable=False, hidden=True,
+                                     name="Where do you want the json file: ")
+        self.kill_sniff = self.add(npyscreen.ButtonPress, name="KILL SNIFF",
+                                   when_pressed_function=self.kill_button)
 
     def afterEditing(self):
         t = Thread(target=self.start_sniffing)
@@ -116,6 +132,8 @@ class ActivateEavesdrop(npyscreen.ActionForm):
         self.malformed_packets.value = str(Eavesdrop.malcount)
         self.malformed_packets.update()
         self.incoming_packets.value = Eavesdrop.current_packet
+        self.incoming_packets.update()
+        self.packets_of_interest.value = Eavesdrop.packets_of_interest
         self.incoming_packets.update()
 
     def kill_button(self):

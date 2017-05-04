@@ -13,16 +13,19 @@ Eavesdrop, sniffs the network, parses out text and saves it to a file.
     The app is meant to be as small as possible.
 ##User Interface
    The user interface, at this point only allows the user (let's call him Dave) to chose with device he want't to sniff on.
-   I mean to add some nore functionality:
+   I mean to add some more functionality:
  
   -[x] Dave can choose what type of payload he wants to save.
-  -[ ] Dave can go in and see how many of each kind of requests and
-       responses the device has been receiving.
+  -[x] Dave can get a glimpse of the packets coming in
+  -[x] Dave can resize the TUI
   -[x] Dave can see how many total packets are passing through
-  -[ ] Dave can choose where the payload is being stored
-  -[ ] Dave can kill the sniff
+  -[x] Dave can choose where the payload is being stored
+  -[ ] Dave can kill the sniff forever
   -[x] Dave can count/ see a graph of malformed packets to see if Hal is misbehaving
   -[x] Dave can choose which device to sniff on
+  -[ ] Dave can go in and see how many of each kind of requests and
+       responses the device has been receiving.
+  -[ ] Dave can choose more than just a continuous sniff
  
 
 
@@ -43,6 +46,7 @@ version can  work on windows in addition to Linux if you install Cygwin.
 ## Running the application
 
 The system must have tshark on it but that's it! 
+
 
 
 
