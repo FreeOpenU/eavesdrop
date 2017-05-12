@@ -20,7 +20,7 @@ Eavesdrop, sniffs the network, parses out text and saves it to a file.
   -[x] Dave can resize the TUI
   -[x] Dave can see how many total packets are passing through
   -[x] Dave can choose where the payload is being stored
-  -[ ] Dave can kill the sniff forever
+  -[x] Dave can kill the sniff forever
   -[x] Dave can count/ see a graph of malformed packets to see if Hal is misbehaving
   -[x] Dave can choose which device to sniff on
   -[ ] Dave can go in and see how many of each kind of requests and

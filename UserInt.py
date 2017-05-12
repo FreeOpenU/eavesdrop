@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import re
+import sys
 from threading import Thread, Timer
 
 import npyscreen
@@ -9,20 +11,56 @@ contentType = ['multipart/form-data', 'text', 'video', 'audio', 'image', "ALL"]
 willyouSave = ['YES', 'NO']
 Eavesdrop = Eavesdrop()
 deviceList = Eavesdrop.get_list
-
-
+process_list = Eavesdrop.get_other_processes()
 
 class EavesdropApp(npyscreen.NPSAppManaged):
     keypress_timeout_default = 5
     def onStart(self):
         self.resize()
         npyscreen.setTheme(npyscreen.Themes.ElegantTheme)
-        self.addForm("MAIN", EavesdropForm, name="Sniffing Parameters")
+        self.addForm("MAIN", WelcomeScreen, name="Hello")
+        self.addForm("MAINFORM", EavesdropForm, name="Sniffing Parameters")
         self.addForm('CONFIRMATION', EavesdropConfirmation, name='confirmation Screen')
         self.addForm('SNIFFER', ActivateEavesdrop, name='Sniffing Network')
+        self.addForm("INPROGRESS", ManageEavesdrops, name="Manage Eavesdrop")
 
 
+class WelcomeScreen(npyscreen.ActionFormWithMenus):
+    def activate(self):
+        self.edit()
 
+    def create(self):
+        self.say_hello = self.add(npyscreen.TitleFixedText, value="Welcome To Eavesdrop")
+        self.m1 = self.new_menu(name="Main Menu", shortcut="^M")
+        self.m1.addItemsFromList([("Create New Sniff ", ""),
+                                  ("Manage Eavesdrops: ", self.manage_drops)])
+
+    def on_ok(self):
+        self.parentApp.switchForm("MAINFORM")
+
+    def manage_drops(self):
+        self.parentApp.switchForm("INPROGRESS")
+
+
+class ManageEavesdrops(npyscreen.ActionForm):
+    def create(self):
+        self.inst = self.add(npyscreen.Textfield, value="Select the Eavesdrop you would like to manage: ")
+        self.processes = self.add(npyscreen.TitleSelectOne, name="Eavesdrops in Process: "
+                                  , values=process_list)
+
+    def on_ok(self):
+        try:
+            job = self.processes.value[0]
+            pid = re.search(r"(\d+)(?=\s)", job)
+            response = npyscreen.notify_confirm("World you like to view this process? "
+                                                "(you may kill the process from the terminal window) ")
+        except(IndexError):
+            self.parentApp.switchForm("MAINFORM")
+            # if response == True:
+            #   subprocess.Popen("fg")
+
+    def on_cancel(self):
+        self.parentApp.switchForm("MAIN")
 class EavesdropForm(npyscreen.ActionForm):
     if len(deviceList) <= 0:
         deviceList = ['No devices Available: Make sure tShark is downloaded']
@@ -50,7 +88,7 @@ class EavesdropForm(npyscreen.ActionForm):
         conf_form.file_address.value = self.file_address.value
         self.parentApp.switchForm('CONFIRMATION')
     def on_cancel(self):
-        self.parentApp.switchForm(None)
+        self.parentApp.switchForm("MAIN")
 
 class EavesdropConfirmation(npyscreen.ActionForm):
     def activate(self):
@@ -61,21 +99,17 @@ class EavesdropConfirmation(npyscreen.ActionForm):
     def create(self):
         self.confMessage = self.add(npyscreen.TitleFixedText, value=
         'Check Sniff Parameters. If it is correct, press the'
-        ' OK button, if it is not, press the Back button.'
-        ' Press the Cancel button if you give up!', editable=False)
+        ' OK button, if it is not, press the Cancel button to go mack to the main form!', editable=False)
         self.device = self.add(npyscreen.TitleFixedText, name='Selected Device: ', editable=False)
         self.content_type = self.add(npyscreen.TitleFixedText, name='Selected Content Type: ', editable=False)
         self.willyousave = self.add(npyscreen.TitleFixedText, name='Will you Save?', editable=False)
         self.file_address = self.add(npyscreen.TitleFixedText, name=
-        "What would you like to name the text file: ")
+        "What would you like to name the text file: ", editable=False)
 
 
-    def on_back(self):
-        self.parentApp.switchFormPrevious()
 
     def on_cancel(self):
-        self.parentApp.switchForm(None)
-
+        self.parentApp.switchForm("MAINFORM")
     def on_ok(self):
         sniffer = self.parentApp.getForm('SNIFFER')
         sniffer.captureDevice.value = self.device.value
@@ -86,6 +120,7 @@ class EavesdropConfirmation(npyscreen.ActionForm):
 
 
 class ActivateEavesdrop(npyscreen.ActionForm):
+
     def start_sniffing(self):
         dev = deviceList.index(self.captureDevice.value)
         desired_content_type = self.content_type.value
@@ -96,7 +131,6 @@ class ActivateEavesdrop(npyscreen.ActionForm):
         return dropped_eaves
 
     def create(self):
-        self.editing = False
         self.packetCount = self.add(npyscreen.TitleFixedText, editable=False,
                                     value='not updating', name="Total Packets")
         self.malformed_packets = self.add(npyscreen.TitleFixedText, editable=False,
@@ -119,6 +153,7 @@ class ActivateEavesdrop(npyscreen.ActionForm):
 
     def afterEditing(self):
         t = Thread(target=self.start_sniffing)
+        t.setDaemon(True)
         t.start()
 
     def while_waiting(self):
@@ -127,7 +162,7 @@ class ActivateEavesdrop(npyscreen.ActionForm):
     def update_count(self):
         self.packetCount.value = str(Eavesdrop.pktCount)
         self.packetCount.update()
-        self.showHost.value = str(Eavesdrop.host_count)
+        self.showHost.value = str(Eavesdrop.host_name)
         self.showHost.update()
         self.malformed_packets.value = str(Eavesdrop.malcount)
         self.malformed_packets.update()
@@ -139,12 +174,12 @@ class ActivateEavesdrop(npyscreen.ActionForm):
     def kill_button(self):
         result = npyscreen.notify_yes_no("Are you sure you want to KILL the sniff? ")
         if result == True:
-            Eavesdrop.terminate_sniff()
-            self.editing = False
+            sys.exit(0)
 
     def on_cancel(self):
         self.parentApp.switchForm(None)
         self.editing = False
+        sys.exit(0)
 
 if __name__ == '__main__':
     npyscreen.wrapper(EavesdropApp().run())

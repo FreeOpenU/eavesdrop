@@ -1,19 +1,33 @@
 # -*- coding: utf-8 -*-
+import platform
 import re
 import subprocess
+import sys
 
 
 class Eavesdrop(object):
     # print device list
-    version = "1.2"
+    __version__ = "1.2"
+    __author__ = "Vera Worri"
 
     def __init__(self):  # instance variables
         self.pktCount = 0
         self.malcount = 0
-        self.host_count = 0
+        self.host_name = ""
         self.parsed_packet = {}
         self.current_packet = ""
         self.packets_of_interest = 0
+        self.process_list = self.get_other_processes()
+
+    def get_other_processes(self):
+        if "Windows" == platform.system():
+            self.process_list = "NOT AVAILABLE FOR WINDOWS"
+        else:
+            p = subprocess.Popen("ps | grep %r " % (sys.path[0] + "/UserInt.py"), stdout=subprocess.PIPE, shell=True)
+            process_list = p.communicate()[0]
+            self.process_list = re.compile(r"(?<=\S)\s(?=\s\d)").split(process_list)
+        return self.process_list
+
 
     @property
     def get_list(self):
@@ -50,7 +64,7 @@ class Eavesdrop(object):
         self.packet = packet
         return self.packet
 
-    def continuous_sniff(self, save, content_type, interface, filename):
+    def continuous_sniff(self, save, content_type, interface, filename="tmpfl.txt"):
         """Starts a sniff in promiscuous mode"""
         data = ""
         if content_type == "ALL":
@@ -77,27 +91,16 @@ class Eavesdrop(object):
         return
 
     def save_packets(self, capture_type, packet):
-        patt = re.compile(r"(?<=Content Type: ).+(?!\d)", re.IGNORECASE)
+        patt = re.compile(r"(?<=Content Type: ).+(?!=\n)", re.IGNORECASE)
         results = re.findall(patt, packet)
         find_ip = re.compile(r"(?<=Source: )\d.+")
         try:
-            ip_addresses = re.search(find_ip, packet).group(0)
+            self.host_name = re.search(find_ip, packet).group(0)
         except:
-            ip_addresses = "NOT FOUND"
-        print (ip_addresses)
+            self.host_name = "NOT FOUND"
         if capture_type != "" and capture_type in results:
             self.f.write(packet)
             self.packets_of_interest += 1
         elif capture_type == "":
             self.f.write(packet)
             self.packets_of_interest += 1
-
-    def terminate_sniff(self):
-        self.tshark_sniff.kill()
-        self.f.close()
-        print("Goodbye")
-        return
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
-
