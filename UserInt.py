@@ -44,7 +44,8 @@ class WelcomeScreen(npyscreen.ActionFormWithMenus):
 
 class ManageEavesdrops(npyscreen.ActionForm):
     def create(self):
-        self.inst = self.add(npyscreen.Textfield, value="Select the Eavesdrop you would like to manage: ")
+        self.inst = self.add(npyscreen.Textfield,
+                             value="This is a list of Eavesdrops originating from %s: " % sys.path[0])
         self.processes = self.add(npyscreen.TitleSelectOne, name="Eavesdrops in Process: "
                                   , values=process_list)
 
