@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+import subprocess
 import sys
 from threading import Thread, Timer
 
@@ -11,7 +12,6 @@ contentType = ['multipart/form-data', 'text', 'video', 'audio', 'image', "ALL"]
 willyouSave = ['YES', 'NO']
 Eavesdrop = Eavesdrop()
 deviceList = Eavesdrop.get_list
-process_list = Eavesdrop.get_other_processes()
 
 class EavesdropApp(npyscreen.NPSAppManaged):
     keypress_timeout_default = 5
@@ -47,21 +47,23 @@ class ManageEavesdrops(npyscreen.ActionForm):
         self.inst = self.add(npyscreen.Textfield,
                              value="This is a list of Eavesdrops originating from %s: " % sys.path[0])
         self.processes = self.add(npyscreen.TitleSelectOne, name="Eavesdrops in Process: "
-                                  , values=process_list)
+                                  , values=Eavesdrop.process_list)
 
     def on_ok(self):
         try:
             job = self.processes.value[0]
-            pid = re.search(r"(\d+)(?=\s)", job)
-            response = npyscreen.notify_confirm("World you like to view this process? "
-                                                "(you may kill the process from the terminal window) ")
+            pid = re.findall(r"(\d+)(?=\s)", str(job))
+            response = npyscreen.notify_confirm("Would you like to kill this process? ")
+            if response == True:
+                subprocess.Popen("kill -9 %s", pid[0])
+                self.processes.update()
         except(IndexError):
             self.parentApp.switchForm("MAINFORM")
-            # if response == True:
-            #   subprocess.Popen("fg")
 
     def on_cancel(self):
         self.parentApp.switchForm("MAIN")
+
+
 class EavesdropForm(npyscreen.ActionForm):
     if len(deviceList) <= 0:
         deviceList = ['No devices Available: Make sure tShark is downloaded']
@@ -89,7 +91,10 @@ class EavesdropForm(npyscreen.ActionForm):
         conf_form.file_address.value = self.file_address.value
         self.parentApp.switchForm('CONFIRMATION')
     def on_cancel(self):
-        self.parentApp.switchForm("MAIN")
+        result = npyscreen.notify_yes_no("Are you sure you want to KILL the sniff? ")
+        if result == True:
+            sys.exit(0)
+
 
 class EavesdropConfirmation(npyscreen.ActionForm):
     def activate(self):
@@ -100,7 +105,8 @@ class EavesdropConfirmation(npyscreen.ActionForm):
     def create(self):
         self.confMessage = self.add(npyscreen.TitleFixedText, value=
         'Check Sniff Parameters. If it is correct, press the'
-        ' OK button, if it is not, press the Cancel button to go mack to the main form!', editable=False)
+        ' OK button, if it is not, press the Cancel button to go mack to the main form!', name="Directions"
+                                    , editable=False)
         self.device = self.add(npyscreen.TitleFixedText, name='Selected Device: ', editable=False)
         self.content_type = self.add(npyscreen.TitleFixedText, name='Selected Content Type: ', editable=False)
         self.willyousave = self.add(npyscreen.TitleFixedText, name='Will you Save?', editable=False)
@@ -110,7 +116,10 @@ class EavesdropConfirmation(npyscreen.ActionForm):
 
 
     def on_cancel(self):
-        self.parentApp.switchForm("MAINFORM")
+        result = npyscreen.notify_yes_no("Are you sure you want to exit Eavesdrop? ")
+        if result == True:
+            sys.exit(0)
+
     def on_ok(self):
         sniffer = self.parentApp.getForm('SNIFFER')
         sniffer.captureDevice.value = self.device.value
@@ -137,7 +146,7 @@ class ActivateEavesdrop(npyscreen.ActionForm):
         self.malformed_packets = self.add(npyscreen.TitleFixedText, editable=False,
                                           value='not updating', name="Malformed Packets")
         self.showHost = self.add(npyscreen.TitleFixedText, editable=False, value='not updating',
-                                 name="Glimpse of packet:")
+                                 name="Hostname of Current Packet:")
         self.content_type = self.add(npyscreen.TitleFixedText, editable=False, hidden=True)
         self.captureDevice = self.add(npyscreen.TitleFixedText, editable=False, hidden=True)
         self.SavePacket = self.add(npyscreen.TitleFixedText, editable=False, hidden=True)

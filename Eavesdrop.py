@@ -2,7 +2,6 @@
 import platform
 import re
 import subprocess
-import sys
 
 
 class Eavesdrop(object):
@@ -23,9 +22,9 @@ class Eavesdrop(object):
         if "Windows" == platform.system():
             self.process_list = "NOT AVAILABLE FOR WINDOWS"
         else:
-            p = subprocess.Popen("ps | grep %r " % (sys.path[0] + "/UserInt.py"), stdout=subprocess.PIPE, shell=True)
+            p = subprocess.Popen("ps | grep -v grep| grep %s " % ("UserInt.py "), stdout=subprocess.PIPE, shell=True)
             process_list = p.communicate()[0]
-            self.process_list = re.compile(r"(?<=\S)\s(?=\s\d)").split(process_list)
+            self.process_list = re.compile(r"(?<=\S)\s(?=\d)").split(process_list)
         return self.process_list
 
 
@@ -52,17 +51,6 @@ class Eavesdrop(object):
         tshark_command = "tshark -i  %s -V  -l -p -S '::::END OF PACKET::::::' " % interface
         return tshark_command
 
-    def parse_packet(self, pkt):
-        """Parses packets into a dictionary"""
-        packet = {}
-        get = packet.get
-        headers_subheaders = re.split(r'(?<=\S)\n(?=\S)', pkt)
-        for item in headers_subheaders:
-            header = re.findall(r'(^(\S.+))', item, re.MULTILINE)
-            remains = item.replace(header[0][0], "")
-            packet[header[0][0]] = get(remains, "")
-        self.packet = packet
-        return self.packet
 
     def continuous_sniff(self, save, content_type, interface, filename="tmpfl.txt"):
         """Starts a sniff in promiscuous mode"""
@@ -76,21 +64,22 @@ class Eavesdrop(object):
             self.f = open(filename, 'a+')
             self.f.write("Tshark PID:  " + str(self.tshark_sniff.pid) + '\r\n\r\n\r\n')
         for line in iter(self.tshark_sniff.stdout.readline, ','):
-
             if ('::::END OF PACKET::::::' not in line):
                 data += line
             else:
                 self.current_packet = data
                 self.pktCount += 1
+                self.host_name, results = self.parse_packets(self.current_packet)
                 if save == "YES":
-                    self.save_packets(content_type, self.current_packet)
+                    self.save_packets(content_type, self.current_packet, results)
                 data = ""
             if "malformed" in data:
                 self.malcount += 1
 
         return
 
-    def save_packets(self, capture_type, packet):
+    def parse_packets(self, packet):
+        "get information out of packets"
         patt = re.compile(r"(?<=Content Type: ).+(?!=\n)", re.IGNORECASE)
         results = re.findall(patt, packet)
         find_ip = re.compile(r"(?<=Source: )\d.+")
@@ -98,9 +87,14 @@ class Eavesdrop(object):
             self.host_name = re.search(find_ip, packet).group(0)
         except:
             self.host_name = "NOT FOUND"
+
+        return self.host_name, results
+
+    def save_packets(self, capture_type, packet, results):
         if capture_type != "" and capture_type in results:
             self.f.write(packet)
             self.packets_of_interest += 1
         elif capture_type == "":
             self.f.write(packet)
             self.packets_of_interest += 1
+        return
