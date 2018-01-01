@@ -117,6 +117,8 @@ class activateEavesdrop(npyscreen.ActionForm):
         self.showHost.update()
         self.showMalformed.value = str(Eavesdrop.malcount)
         self.showMalformed.update()
+        self.Packet.valut = str(Eavesdrop.current_frame)
+        self.Packet.update()
 
     def on_cancel(self):
         self.parentApp.switchForm(None)

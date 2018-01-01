@@ -1,12 +1,11 @@
 # FreeOpenU: Eavesdrop:
 #    - T.U.I client
 import json
-import re
 import subprocess
-
+import uuid
 
 class Eavesdrop(object):
-    #print device list
+
     version = "0.1"
 
     def __init__(self):  # instance variables
@@ -14,13 +13,14 @@ class Eavesdrop(object):
         self.malcount = 0
         self.host_count = 0
         self.packet = {}
+        self.current_frame = ""
+        self.packet_id = ""
         self.f = open('pacFile.json', 'a')
 
     def getList(self):
         p = subprocess.Popen("tshark -D", stdout=subprocess.PIPE, shell=True)
-        devlist = p.communicate()[0]
-        self.devList = re.compile("[0-9][.]").split(devlist)
-        self.devList.pop(0)
+        devlist = p.communicate()[0].split(b"\n")
+        self.devList = [str(x) for x in devlist]
         return self.devList
 
     # use to print tshark versions and options then exits
@@ -35,46 +35,50 @@ class Eavesdrop(object):
         tshark_command = "tshark -i  %s -V  -l -p -S '::::END OF PACKET::::::' " % interface
         return tshark_command
     #Parse the packets into ordered dict
-    def parsePacket(self,pkt):
-        packet = {}
-        get = packet.get
-        headers_subheaders = re.split(r'(?<=\S)\n(?=\S)', pkt)
-        for item in headers_subheaders:
-            header = re.findall(r'(^(\S.+))', item, re.MULTILINE)
-            remains = item.replace(header[0][0], "")
-            packet[header[0][0]] = get(remains, "")
-        self.packet = packet
-        return self.packet
+
 
     def contSniff(self, save, capture_type, interface):
         if capture_type == "ALL":
             capture_type = ""
         command = self.create_sniff_command(interface)  #"tshark -V  -l -p  -S '::::END OF PACKET::::::' "
         data = ""
+        this_frame = {}
+        all_frames = []
         p = subprocess.Popen(command, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, shell=True)
+        self.packet_id = str(uuid.uuid1())
         for line in iter(p.stdout.readline, ','):
             if ('::::END OF PACKET::::::' not in line):
-                data += line
+                if ("Frame Number" in line):
+                    all_frames.append(this_frame)
+                    self.current_frame = line
+                    this_frame[self.current_frame] = ""
+                    continue
+                elif self.current_frame != "":
+                    this_frame[self.current_frame] += line
             else:
-                packet = data
+                self.packet["ID"] = self.packet_id
+                self.packet["Frames"] = all_frames
+                self.packet["Metadata"] = data
                 self.pktCount += 1
                 if save == "YES":
-                    self.packet = self.parsePacket(packet)
                     self.saveSniffs(capture_type, self.packet)
-            if "malformed" in data:
+                self.packet_id = str(uuid.uuid1())
+            if "malformed" in line:
                 self.malcount += 1
         return
 
     def saveSniffs(self, capture_type, packet):
         found = False
-        for k, v in packet.items():
-            if capture_type in k:
-                found = True
-            if capture_type in v:
-                found = True
+        for frame in packet["Frames"]:
+            for k, v in frame.items():
+                if capture_type in k:
+                    found = True
+                if capture_type in v:
+                    found = True
         if found == True:
             json.dump(packet, fp=self.f)
 
     def closeSniff(self):
         self.f.close()
+

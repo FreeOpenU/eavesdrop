@@ -22,9 +22,9 @@ Eavesdrop, sniffs the network, parses out text and saves it to a file.
        
   -[x] Dave can see how many total packets are passing through
   
-  -[ ] Dave can choose where the payload is being stored
+  -[x] Dave can choose where the payload is being stored
   
-  -[ ] Dave can kill the sniff
+  -[x] Dave can kill the sniff
   
   -[x] Dave can count/ see a graph of malformed packets to see if Hal is misbehaving
   
